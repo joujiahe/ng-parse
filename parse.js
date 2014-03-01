@@ -48,9 +48,31 @@ angular.module('ngParse', [])
             });
         }
 
-        function getObject(className, options) {
-            return $http.get(_objectsApiUrl + className + options.objectId, {
+        function readObject(className, options) {
+            return $http.get(_objectsApiUrl + className + '/' + (options.objectId || ''), {
                 headers: _objectGetHeaders
+            });
+        }
+
+        function updateObject(className, options, clean) {
+            if (clean)
+                _cleanFields(options);
+
+            return $http.put(_objectsApiUrl + className + '/' + options.objectId, options, {
+                headers: _objectUpdateHeaders
+            });
+        }
+
+        function _cleanFields(options) {
+            angular.forEach(options, function(value, field) {
+                if (value === undefined)
+                    options[field] = {__op: 'Delete'};
+            });
+        }
+
+        function deleteObject(className, options) {
+            return $http.delete(_objectsApiUrl + className + '/' + options.objectId, {
+                headers: _objectDeleteHeaders
             });
         }
 
@@ -65,33 +87,12 @@ angular.module('ngParse', [])
             });
         }
 
-        function updateObject(className, options, clean) {
-            return clean ? deleteFields(className, options) :
-            $http.put(_objectsApiUrl + className + '/' + options.objectId, options, {
-                headers: _objectUpdateHeaders
-            });
-        }
-
-        function deleteObject(className, options) {
-            return $http.delete(_objectsApiUrl + className + '/' + options.objectId, {
-                headers: _objectDeleteHeaders
-            });
-        }
-
-        function deleteFields(className, options) {
-            angular.forEach(options, function(value, field) {
-                if (value === undefined)
-                    options[field] = {__op: 'Delete'};
-            });
-            return updateObject(className, options);
-        }
-
         function saveObject(className, options, clean) {
             return options.objectId ? updateObject(className, options, clean) : 
                     createObject(className, options);
         }
 
-        function _resolveReq(req, callback, clean) {
+        function _resolveReq(className, req, callback, clean) {
             var _object = this;
             if (!callback)
                 callback = angular.noop;
@@ -122,21 +123,19 @@ angular.module('ngParse', [])
 
         function ParseObject(className, options) {
             var _object = angular.extend({}, options),
-                _createObject = createObject.bind(_object, className, _object),
-                _getObject    = getObject.bind(_object, className, _object),
-                _findObjects  = findObjects.bind(_object, className, _object),
-                _updateObject = updateObject.bind(_object, className, _object),
-                _deleteObject = deleteObject.bind(_object, className, _object),
-                _deleteFields = deleteFields.bind(_object, className, _object),
-                _saveObject   = saveObject.bind(_object, className, _object);
+                // _createObject = createObject.bind(undefined, className, _object),
+                _readObject   = readObject.bind(undefined, className, _object),
+                _findObjects  = findObjects.bind(undefined, className, _object),
+                // _updateObject = updateObject.bind(undefined, className, _object),
+                _deleteObject = deleteObject.bind(undefined, className, _object),
+                _saveObject   = saveObject.bind(undefined, className, _object);
 
-            // _object.create = _resolveReq.bind(_object, _createObject);
-            _object.get    = _resolveReq.bind(_object, _getObject);
-            _object.find   = _resolveReq.bind(_object, _findObjects);
-            // _object.update = _resolveReq.bind(_object, _updateObject);
-            _object.remove = _resolveReq.bind(_object, _deleteObject);
-            _object.save   = _resolveReq.bind(_object, _saveObject);
-            _object.deleteFields   = _resolveReq.bind(_object, _deleteFields);
+            // _object.create = _resolveReq.bind(_object, className, _createObject);
+            _object.get    = _resolveReq.bind(_object, className, _readObject);
+            _object.find   = _resolveReq.bind(_object, className, _findObjects);
+            // _object.update = _resolveReq.bind(_object, className, _updateObject);
+            _object.remove = _resolveReq.bind(_object, className, _deleteObject);
+            _object.save   = _resolveReq.bind(_object, className, _saveObject);
             return _object;
         }
 
@@ -144,32 +143,6 @@ angular.module('ngParse', [])
             return $http.post(_usersApiUrl, options, {
                 headers: _objectCreateHeaders
             });
-        }
-
-        function updateUser(options, clean) {
-            return clean ? deleteUserFields(options) :
-            (function(_userData) {
-                delete _userData.sessionToken;
-                var headers = angular.extend({}, _objectUpdateHeaders);
-                headers[_headers.sessionToken] = options.sessionToken;
-
-                return $http.put(_usersApiUrl + options.objectId, _userData, {
-                    headers: headers
-                });
-            })(angular.extend({}, options));
-        }
-
-        function deleteUserFields(options) {
-            angular.forEach(options, function(value, field) {
-                if (value === undefined)
-                    options[field] = {__op: 'Delete'};
-            });
-            return updateUser(options);
-        }
-
-        function saveUser(options, clean) {
-            return options.objectId ? updateUser(options, clean) : 
-                    createUser(options);
         }
 
         function userLogin(options) {
@@ -182,12 +155,41 @@ angular.module('ngParse', [])
             });
         }
 
+        function updateUser(options, clean) {
+            if (clean)
+                _cleanFields(options);
+
+            return (function(userData) {
+                delete userData.sessionToken;
+
+                var headers = angular.extend({}, _objectUpdateHeaders);
+                headers[_headers.sessionToken] = options.sessionToken;
+
+                return $http.put(_usersApiUrl + options.objectId, userData, {
+                    headers: headers
+                });
+            })(angular.extend({}, options));
+        }
+
+        function deleteUser(options) {
+
+        }
+
+        function findUsers(options) {
+
+        }
+
+        function saveUser(options, clean) {
+            return options.objectId ? updateUser(options, clean) : 
+                    createUser(options);
+        }
+
         function ParseUser(options) {
-            var _user = ParseObject('users', options),
-                _updateUser       = updateUser.bind(_user, _user),
-                _deleteUserFields = deleteUserFields.bind(_user, _user),
-                _saveUser         = saveUser.bind(_user, _user),
-                _userLogin        = userLogin.bind(_user, _user);
+            var _user = angular.extend({}, options),
+                // _updateUser       = updateUser.bind(undefined, _user),
+                _deleteUserFields = deleteUserFields.bind(undefined, _user),
+                _saveUser         = saveUser.bind(undefined, _user),
+                _userLogin        = userLogin.bind(undefined, _user);
 
             _user.signUp = _resolveReq.bind(_user, _saveUser);
             // _user.update = _resolveReq.bind(_user, _updateUser);

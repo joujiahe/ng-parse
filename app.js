@@ -6,27 +6,36 @@ angular.module('app', ['ngParse'])
 }])
 
 .controller('main', ['$scope', 'ngParse', function($scope, ngParse) {
-
-    var user = ngParse.User();
-    user.username = "tester";
-    user.password = "5.ru8ck6";
-    user.logIn(function(error) {
-        console.log(user);
-        console.log(error);
-        user.email = "tester@gmail.com";
-        user.save(function(error) {
-            console.log(user);
-            console.log(error);
-        });
-    });
+    // var test = ngParse.Object('TestObject');
+    // test.save();
+    // test.objectId = "IMqmCi8GqM";
+    // test.get(function() {
+    //     console.log(test);
+    //     angular.forEach(test, function(object) {
+    //         object.remove(function() {
+    //             console.log(object);
+    //         });
+    //     });
+    // });
+    // var user = ngParse.User();
+    // user.username = "tester";
+    // user.password = "5.ru8ck6";
+    // user.logIn(function(error) {
+    //     console.log(user);
+    //     console.log(error);
+    //     user.email = "tester@gmail.com";
+    //     user.save(function(error) {
+    //         console.log(user);
+    //         console.log(error);
+    //     });
+    // });
     // var test = ngParse.Object('TestObject', {
     //     query: {
     //         where: {
-    //             foo: 'qoo'
+    //             foo: 'qqq'
     //         }
     //     }
     // });
-    // test.objectId = '7n8nhWimSL';
     // test.find(function() {
     //     console.log(test);
     // });
@@ -67,7 +76,6 @@ angular.module('app', ['ngParse'])
     // .success(function(data, status, headers, config) {
     //     console.log(data);
     // });
-
     // ngParse.Object('TestObject').batch({requests:[{
     //     "method": "DELETE",
     //     "path": "/1/classes/TestObject/tK0py9uN3J"
