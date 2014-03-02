@@ -7,9 +7,11 @@ angular.module('app', ['ngParse'])
 
 .controller('main', ['$scope', 'ngParse', function($scope, ngParse) {
     // var test = ngParse.Object('TestObject');
+    // test.foo = "真好吃";
     // test.save();
-    // test.objectId = "IMqmCi8GqM";
-    // test.get(function() {
+    // test.objectId = 'Nap7uNrhEt';
+    // test.get(function(success) {
+    //     console.log(success);
     //     console.log(test);
     //     angular.forEach(test, function(object) {
     //         object.remove(function() {
@@ -18,13 +20,12 @@ angular.module('app', ['ngParse'])
     //     });
     // });
     // var user = ngParse.User();
-    // user.username = "tester";
+    // user.username = "myname";
     // user.password = "5.ru8ck6";
     // user.logIn(function(error) {
     //     console.log(user);
     //     console.log(error);
-    //     user.email = "tester@gmail.com";
-    //     user.save(function(error) {
+    //     user.remove(function(error) {
     //         console.log(user);
     //         console.log(error);
     //     });
@@ -36,8 +37,9 @@ angular.module('app', ['ngParse'])
     //         }
     //     }
     // });
-    // test.find(function() {
-    //     console.log(test);
+    // var user = ngParse.User();
+    // user.find(function() {
+    //     console.log(user);
     // });
     // test.query.where = {foo: 'qoo'};
     // test.find(function() {
