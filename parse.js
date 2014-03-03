@@ -53,10 +53,12 @@ angular.module('ngParse', [])
 
     this.$get = ['$http', '$q', function($http, $q) {
 
+        // Base
         function _api(method, classPath, params, configs) {
             return $http[method](_apiUrl + classPath, params, configs);
         }
 
+        // Parse Objects
         function _classesApi(method, className, params, configs) {
             return _api(method, 'classes/' + className, params, configs);
         }
@@ -83,25 +85,6 @@ angular.module('ngParse', [])
             return _classesApi(_DEL_, className + _DS_ + params.objectId, {
                 headers: _objectDeleteHeaders
             });
-        }
-
-        function _query(classPath, queryObject) {
-            return _api(_GET_, classPath,  {
-                params: _parseQueryObject(queryObject),
-                headers: _objectGetHeaders
-            });
-        }
-
-        function _parseQueryObject(queryObject) {
-            var query = {};
-            angular.forEach(queryObject, function(value, key) {
-                query[key] = JSON.stringify(value);
-            });
-            return query;
-        }
-
-        function queryObjects(className, params) {
-            return _query('classes/' + className, params.query);
         }
 
         // function saveObject(className, options, clean) {
@@ -159,13 +142,6 @@ angular.module('ngParse', [])
                             function(success, data, callback) {
                                 angular.extend(_object, data);
                                 callback(success);
-                            }),
-
-                _queryAction = _action.bind(undefined,
-                            queryObjects.bind(undefined, className, _object),
-                            function(success, data, callback) {
-                                angular.extend(_object, data);
-                                callback(success);
                             });
 
             _object.save = function(callback) {
@@ -187,14 +163,10 @@ angular.module('ngParse', [])
                 return _object;
             }
 
-            _object.find = function(callback) {
-                _queryAction(callback);
-                return _object;
-            }
-
             return _object;
         }
 
+        // Parse Users
         function _usersApi(method, params, configs) {
             return _api(method, 'users/' + (params.objectId || ''), params, configs);
         }
@@ -225,10 +197,6 @@ angular.module('ngParse', [])
             })(angular.extend({}, _userDeleteHeaders));
         }
 
-        function findUsers(params) {
-
-        }
-
         function _loginApi(method, params, configs) {
             return _api(method, 'login/', params, configs);
         }
@@ -241,10 +209,6 @@ angular.module('ngParse', [])
                 },
                 headers: _objectGetHeaders
             });
-        }
-
-        function queryUsers(params) {
-            return _query('users/', params.query);
         }
 
         function ParseUser(params) {
@@ -311,6 +275,51 @@ angular.module('ngParse', [])
             return _user;
         }
 
+        // Parse Query
+        function _queryApi(classPath, query) {
+            return _api(_GET_, classPath,  {
+                params: _parseQuery(query),
+                headers: _objectGetHeaders
+            });
+        }
+
+        function _parseQuery(query) {
+            var query = {};
+            angular.forEach(query, function(value, key) {
+                query[key] = JSON.stringify(value);
+            });
+            return query;
+        }
+
+        function queryObjects(className, query) {
+            return _queryApi('classes/' + className, query);
+        }
+
+        function queryUsers(query) {
+            return _queryApi('users/', query);
+        }
+
+        function ParseQuery(className) {
+            var _query = {},
+
+                _queryAction = _action.bind(undefined,
+                            queryObjects.bind(undefined, className, _query),
+                            function(success, data, callback) {
+                                data.results = data.results.map(function(object) {
+                                    return ParseObject(className, object);
+                                });
+                                angular.extend(_query, data);
+                                callback(success);
+                            });
+
+            _query.find = function(callback) {
+                _queryAction(callback);
+                return _query;
+            }
+
+            return _query;
+        }
+
         function ParseBatch(options) {
             return $http.post(_batchApiUrl, options, {
                headers: _objectBatchHeaders
@@ -320,6 +329,7 @@ angular.module('ngParse', [])
         return {
             Object: ParseObject,
             User: ParseUser,
+            Query: ParseQuery,
             Batch: ParseBatch
         };
     }];

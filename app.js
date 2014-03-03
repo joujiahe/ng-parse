@@ -6,98 +6,21 @@ angular.module('app', ['ngParse'])
 }])
 
 .controller('main', ['$scope', 'ngParse', function($scope, ngParse) {
-    // var test = ngParse.Object('TestObject');
-    // test.foo = "真好吃";
-    // test.save();
-    // test.objectId = 'Nap7uNrhEt';
-    // test.get(function(success) {
-    //     console.log(success);
-    //     console.log(test);
-    //     angular.forEach(test, function(object) {
-    //         object.remove(function() {
-    //             console.log(object);
-    //         });
-    //     });
-    // });
-    // var user = ngParse.User();
-    // user.username = "myname";
-    // user.password = "5.ru8ck6";
-    // user.logIn(function(error) {
-    //     console.log(user);
-    //     console.log(error);
-    //     user.remove(function(error) {
-    //         console.log(user);
-    //         console.log(error);
-    //     });
-    // });
-    // var test = ngParse.Object('TestObject', {
-    //     query: {
-    //         where: {
-    //             foo: 'qqq'
-    //         }
-    //     }
-    // });
-    // var user = ngParse.User();
-    // user.find(function() {
-    //     console.log(user);
-    // });
-    // test.query.where = {foo: 'qoo'};
-    // test.find(function() {
-    //     console.log(test);
-    // });
-    // test.foo = 'qqq';
-    // test.save();
-    // test.get(function() {
-    //     angular.forEach(test, function(object, key){
-    //         console.log(value);
-    //     })
-    // });
-    // test.create().success(function(data){
-    //     console.log(data);
-    // });
-    // .get()
-    // .success(function(data, status, headers, config) {
-    //     console.log(data);
-    // });    // ngParse.Object('TestObject').create({
-    //     foo: 'bar'
-    // })
-    // .then(function(object) {
-    //     console.log(object);
-    // });
-    // ngParse.Object('TestObject').delete({
-    //     objectId: '6zL0jk7vQD',
-    //     qoo: 'test qoo'
-    // })
-    // .success(function(data, status, headers, config) {
-    //     console.log(data);
-    // });
-    // ngParse.Object('TestObject').deleteFields({
-    //     objectId: 'tK0py9uN3J',
-    //     fields: ['mynewfield']
-    // })
-    // .success(function(data, status, headers, config) {
-    //     console.log(data);
-    // });
-    // ngParse.Object('TestObject').batch({requests:[{
-    //     "method": "DELETE",
-    //     "path": "/1/classes/TestObject/tK0py9uN3J"
-    // }, {
-    //     "method": "DELETE",
-    //     "path": "/1/classes/TestObject/Ow7ZEjvYlG"
-    // }, {
-    //     "method": "DELETE",
-    //     "path": "/1/classes/TestObject/9bAuZUQSs9"
-    // }, {
-    //     "method": "DELETE",
-    //     "path": "/1/classes/TestObject/xrKh8uvCZz"
-    // }, {
-    //     "method": "DELETE",
-    //     "path": "/1/classes/TestObject/IxzhGRfCSc"
-    // }, {
-    //     "method": "DELETE",
-    //     "path": "/1/classes/TestObject/3uVjsfAesP"
-    // }]})
-    // .success(function(data, status, headers, config) {
-    //     console.log(data);
-    // });
+
+    var query = $scope.query = ngParse.Query('TestObject');
+    query.find();
+
+    $scope.createObject = function() {
+        var object = ngParse.Object('TestObject');
+        object.save(function() {
+            query.find(); 
+        });
+    }
+
+    $scope.removeObject = function(object) {
+        object.remove(function() {
+            console.log(query);
+        })
+        object = undefined;
+    }
 }]);
