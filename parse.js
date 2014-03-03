@@ -8,9 +8,10 @@ angular.module('ngParse', [])
 
     var _apiVersion = 1,
         _apiUrl = 'https://api.parse.com/' + _apiVersion + '/',
-        _objectsApiUrl = _apiUrl + 'classes/',
-        _usersApiUrl = _apiUrl + 'users/',
-        _batchApiUrl = _apiUrl + 'batch/',
+        _objectsApiUrl  = _apiUrl + 'classes/',
+        _usersApiUrl    = _apiUrl + 'users/',
+        _batchApiUrl    = _apiUrl + 'batch/',
+        _functionApiUrl = _apiUrl + 'functions/',
         _appId,
         _restKey,
         _headers = {
@@ -21,9 +22,18 @@ angular.module('ngParse', [])
             contentJson: 'application/json'
         },
         // Caches for request headers
-        _objectGetHeaders,
         _objectCreateHeaders,
-        _objectUpdateHeaders;
+        _objectGetHeaders,
+        _objectUpdateHeaders,
+        _objectDeleteHeaders, 
+
+        _userCreateHeaders,
+        _userGetHeaders,
+        _userUpdateHeaders,
+        _userDeleteHeaders,
+
+        _batchHeaders,
+        _functionHeaders;
 
     this.init = function(appId, restKey) {
         _appId = appId;
@@ -37,8 +47,8 @@ angular.module('ngParse', [])
         _jsonHeaders = angular.copy(_baseHeaders);
         _jsonHeaders[_hs.contentType] = _hs.contentJson;
 
-        _objectGetHeaders    = _baseHeaders;
         _objectCreateHeaders = _jsonHeaders;
+        _objectGetHeaders    = _baseHeaders;
         _objectUpdateHeaders = _jsonHeaders;
         _objectDeleteHeaders = _baseHeaders;
 
@@ -47,8 +57,8 @@ angular.module('ngParse', [])
         _userUpdateHeaders   = _jsonHeaders;
         _userDeleteHeaders   = _jsonHeaders;
 
-        _objectBatchHeaders  = _jsonHeaders;
-
+        _batchHeaders        = _jsonHeaders;
+        _functionHeaders     = _jsonHeaders;
     };
 
     this.$get = ['$http', '$q', function($http, $q) {
@@ -59,10 +69,12 @@ angular.module('ngParse', [])
         }
 
         // Parse Objects
-        function _classesApi(method, className, params, configs) {
-            return _api(method, 'classes/' + className, params, configs);
-        }
+        // function _classesApi(method, className, params, configs) {
+        //     return _api(method, 'classes/' + className, params, configs);
+        // }
 
+        // Try more generic way...
+        var _classesApi = _api;
         function createObject(className, params) {
             return _classesApi(_POST_, className, params, {
                 headers: _objectCreateHeaders
@@ -112,6 +124,10 @@ angular.module('ngParse', [])
             .error(function(data) {
                 process(false, data, callback);
             });
+        }
+
+        function ParseClassesObject(className, params) {
+            return ParseObject('classes/' + className, params);
         }
 
         function ParseObject(className, params) {
@@ -320,17 +336,49 @@ angular.module('ngParse', [])
             return _query;
         }
 
-        function ParseBatch(options) {
+        function ParseBatch(params) {
             return $http.post(_batchApiUrl, options, {
-               headers: _objectBatchHeaders
+               headers: _batchHeaders
             });
         }
 
+        function ParseRole(params) {
+            return ParseObject('roles', params);
+        }
+
+        function ParseFile(params) {
+            return ParseObject('files', params);
+        }
+
+        function ParseAnalytics(params) {
+
+        }
+
+        function ParsePush(params) {
+
+        }
+
+        function ParseInstallation(params) {
+            return ParseObject('installations', params);
+        }
+
+        function ParseFunction(params) {
+            return $http.post(_functionApiUrl, params, {
+               headers: _functionHeaders
+            });
+        }
+
+        function ParseGeo() {
+
+        }
+
         return {
-            Object: ParseObject,
+            Object: ParseClassesObject,
             User: ParseUser,
             Query: ParseQuery,
-            Batch: ParseBatch
+            Batch: ParseBatch,
+            Role: ParseRole,
+            File: ParseFile
         };
     }];
 }]);

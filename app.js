@@ -23,4 +23,7 @@ angular.module('app', ['ngParse'])
         })
         object = undefined;
     }
+
+    // var role = ngParse.Role({name: 'Test', ACL: {'*': {read: true}}});
+    // role.save();
 }]);
