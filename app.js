@@ -1,13 +1,22 @@
-angular.module('app', ['ngParse', 'ngREST'])
+angular.module('app', ['ngParse'])
 .config(['ngParseProvider', function(ngParseProvider) {
     var appId = 'q6XQ0eiusGQxbjResDckcaZNhM4h06a8LmIKSfdo',
         restKey = 'kly8JbLTsQQLBzLyr6NvtxRYp8PnTo8B7PMLlgSt';
     ngParseProvider.init(appId, restKey);
 }])
 
-.controller('main', ['$scope', 'ngParse', 'ngREST', function($scope, ngParse, ngREST) {
-    var File = ngParse.File();
-    console.dir(new File());
+.controller('main', ['$scope', 'ngParse', function($scope, ngParse) {
+
+    var TestObject = ngParse.Object('TestObject');
+    var object = new TestObject();
+    // object.objectId = 'TNOM8mmERr';
+    // object.foo = '123';
+    object.save({method: 'testMethod'}).then(function() {
+        console.dir(object);
+    });
+
+    // var File = ngParse.File();
+    // console.dir(new File());
     // var TestObject = ngParse.Object('TestObject');
     // var object = new TestObject({foo: 'qoo'});
     // object.objectId = 'qlUBqWTtsj';

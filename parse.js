@@ -1,175 +1,20 @@
-angular.module('ngREST', [])
-.factory('ngREST', ['$http', '$q', function($http, $q) {
-    var _DS_ = '/',
-        _SP_ = '@';
-
-    var _methods = {
-        post: {
-            method: 'POST',
-        },
-        get: {
-            method: 'GET',
-        },
-        put: {
-            method: 'PUT',
-        },
-        delete: {
-            method: 'DELETE',
-        }
-    };
-
-    function _mergeConfigs(target, source) {
-        if (source == undefined)
-            return target;
-
-        var configs = angular.extend({}, target);
-        angular.forEach(source, function(config, name) {
-            if (angular.isObject(config))
-                configs[name] = angular.extend({}, target[name], config);
-            else
-                configs[name] = config;
-        });
-
-        return configs;
-    }
-
-    return function (url, defaultConfigs, methods) {
-        var urlParams = url.split(_SP_);
-
-        defaultConfigs = angular.extend({url: urlParams.shift()}, defaultConfigs);
-
-        angular.forEach(_methods, function(_methodConfigs, name) {
-            if (methods[name])
-                methods[name] = _mergeConfigs(methods[name], _methodConfigs);
-            else if(methods[name] != false)
-                methods[name] = _methodConfigs;
-            else
-                delete methods[name];
-        });
-
-        function Robject(properties) {
-            var _this = this;
-            angular.forEach(properties, function(value, property) {
-                _this[property] = value;
-            });
-        }
-        var prototype  = Robject.prototype,
-            refMethods = {};
-
-        angular.forEach(methods, function(methodConfigs, name) {
-            if (angular.isString(methodConfigs)) {
-                refMethods[name] = methodConfigs;
-            } else if (angular.isFunction(methodConfigs)) {
-                prototype[name] = methodConfigs;
-            } else {
-                var _before = methodConfigs.before || angular.noop,
-                    _after  = methodConfigs.after || angular.noop,
-                    _data   = (/^(POST|PUT)$/i.test((methodConfigs.method))) ? 'data' : 'params';
-
-                delete methodConfigs.before;
-                delete methodConfigs.after;
-
-                methodConfigs = _mergeConfigs(defaultConfigs, methodConfigs);
-                prototype[name] = function(actionConfigs) {
-                    var _this = this,
-                        deferred = $q.defer();
-
-                    actionConfigs = _mergeConfigs(methodConfigs, actionConfigs);
-                    actionConfigs[_data] = JSON.parse(JSON.stringify((_this)));
-
-                    if(_before.bind(_this)(actionConfigs) == false) {
-                        deferred.reject(_this);
-                    } else {
-                        for (var i = 0, l = urlParams.length; i < l; i++) {
-                            var property = urlParams[i];
-                            if (_this[property])
-                                actionConfigs.url += _this[property] + _DS_;
-                            else
-                                break;
-                        }
-                        $http(actionConfigs)
-                        .success(function(data) {
-                            angular.extend(_this, data);
-                            deferred.resolve(_after.bind(_this)(data) || _this);
-                        }).error(function(data) {
-                            deferred.reject(data);
-                        });
-                    }
-                    // console.dir(actionConfigs);
-                    return deferred.promise;
-                }
-            }
-        });
-
-        angular.forEach(refMethods, function(methodConfigs, name) {
-            prototype[name] = prototype[methodConfigs];
-        });
-
-        return Robject;
-    }
-}]);
-
-angular.module('ngParse', [])
+angular.module('ngParse', ['rest'])
 .provider('ngParse', [function() {
     var _apiVersion = 1,
-        _apiUrl = 'https://api.parse.com/' + _apiVersion + '/',
-        _objectsApiUrl  = _apiUrl + 'classes/',
-        _usersApiUrl    = _apiUrl + 'users/',
-        _batchApiUrl    = _apiUrl + 'batch/',
-        _functionApiUrl = _apiUrl + 'functions/',
+        _apiBaseUrl = 'https://api.parse.com/',
         _appId,
-        _restKey,
-        _headers = {
-            appId: 'X-Parse-Application-Id',
-            restKey: 'X-Parse-REST-API-Key',
-            sessionToken: 'X-Parse-Session-Token',
-            contentType: 'Content-Type',
-            contentJson: 'application/json'
-        },
-        // Caches for request headers
-        _objectCreateHeaders,
-        _objectGetHeaders,
-        _objectUpdateHeaders,
-        _objectDeleteHeaders, 
+        _restKey;
 
-        _userCreateHeaders,
-        _userGetHeaders,
-        _userUpdateHeaders,
-        _userDeleteHeaders,
-
-        _batchHeaders,
-        _functionHeaders;
-
-    this.init = function(appId, restKey) {
+    this.init = function(appId, restKey, apiVersion) {
         _appId = appId;
         _restKey = restKey;
+        _apiUrl =  _apiBaseUrl + (apiVersion || _apiVersion) + '/';
+    }
 
-        var _hs = _headers;
-        _baseHeaders = {};
-        _baseHeaders[_hs.appId]   = _appId;
-        _baseHeaders[_hs.restKey] = _restKey;
+    this.$get = ['rest', '$q', function(rest, $q) {
 
-        _jsonHeaders = angular.copy(_baseHeaders);
-        _jsonHeaders[_hs.contentType] = _hs.contentJson;
-
-        _objectCreateHeaders = _jsonHeaders;
-        _objectGetHeaders    = _baseHeaders;
-        _objectUpdateHeaders = _jsonHeaders;
-        _objectDeleteHeaders = _baseHeaders;
-
-        _userCreateHeaders   = _jsonHeaders;
-        _userSignUpHeaders   = _jsonHeaders;
-        _userUpdateHeaders   = _jsonHeaders;
-        _userDeleteHeaders   = _jsonHeaders;
-
-        _batchHeaders        = _jsonHeaders;
-        _functionHeaders     = _jsonHeaders;
-    };
-
-    this.$get = ['ngREST', '$q', function(ngREST, $q) {
-
-        function ParseObject(className, params) {
-            var Resource = ngREST(_apiUrl + 'classes/' + className + '/@objectId', {
+        function ParseObject(className) {
+            var RESTObject = rest(_apiUrl + 'classes/' + className + '/@objectId', {
                 // default configs
                 headers: {
                     'X-Parse-Application-Id': _appId,
@@ -203,18 +48,18 @@ angular.module('ngParse', [])
                         var _this = this;
 
                         return _this.results.map(function(data) {
-                            return new Resource(data);
+                            return new RESTObject(data);
                         });
                     }
                 }
             });
 
-            return Resource;
+            return RESTObject;
         }
 
-        function ParseUser(params) {
+        function ParseUser() {
             var sessionToken,
-                Resource = ngREST(_apiUrl + 'users/@objectId', {
+                RESTObject = rest(_apiUrl + 'users/@objectId', {
                 // default configs
                 headers: {
                     'X-Parse-Application-Id': _appId,
@@ -266,23 +111,39 @@ angular.module('ngParse', [])
                         var _this = this;
 
                         return _this.results.map(function(data) {
-                            return new Resource(data);
+                            return new RESTObject(data);
                         });
                     }
                 }
             });
 
-            return Resource;
+            return RESTObject;
         }
 
-        function ParseBatch(params) {
-            return $http.post(_batchApiUrl, options, {
-               headers: _batchHeaders
+        function ParseBatch() {
+            var RESTObject = rest(_apiUrl + 'batch/@objectId', {
+                // default configs
+                headers: {
+                    'X-Parse-Application-Id': _appId,
+                    'X-Parse-REST-API-Key': _restKey
+                }
+            }, {
+                // object methods
+                post: {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                },
+                get: false,
+                put: false,
+                delete: false
             });
+
+            return RESTObject;
         }
 
-        function ParseRole(params) {
-            var Resource = ngREST(_apiUrl + 'roles/@objectId', {
+        function ParseRole() {
+            var RESTObject = rest(_apiUrl + 'roles/@objectId', {
                 // default configs
                 headers: {
                     'X-Parse-Application-Id': _appId,
@@ -316,17 +177,17 @@ angular.module('ngParse', [])
                         var _this = this;
 
                         return _this.results.map(function(data) {
-                            return new Resource(data);
+                            return new RESTObject(data);
                         });
                     }
                 }
             });
 
-            return Resource;
+            return RESTObject;
         }
 
-        function ParseFile(params) {
-            var Resource = ngREST(_apiUrl + 'roles/@objectId', {
+        function ParseFile() {
+            var RESTObject = rest(_apiUrl + 'roles/@objectId', {
                 // default configs
                 headers: {
                     'X-Parse-Application-Id': _appId,
@@ -344,25 +205,23 @@ angular.module('ngParse', [])
                 delete: false
             });
 
-            return Resource;
+            return RESTObject;
         }
 
-        function ParseAnalytics(params) {
-
-        }
-
-        function ParsePush(params) {
+        function ParseAnalytics() {
 
         }
 
-        function ParseInstallation(params) {
-            return ParseObject('installations', params);
+        function ParsePush() {
+
         }
 
-        function ParseFunction(params) {
-            return $http.post(_functionApiUrl, params, {
-               headers: _functionHeaders
-            });
+        function ParseInstallation() {
+
+        }
+
+        function ParseFunction() {
+
         }
 
         function ParseGeo() {
@@ -372,10 +231,10 @@ angular.module('ngParse', [])
         return {
             Object: ParseObject,
             User: ParseUser,
+            Batch: ParseBatch,
             Role: ParseRole,
             File: ParseFile,
             // Query: ParseQuery,
-            // Batch: ParseBatch,
             // File: ParseFile
         };
     }];
