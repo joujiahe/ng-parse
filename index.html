@@ -5,10 +5,7 @@
     <title>ngParse for AngularJS</title>
 </head>
 <body ng-controller="main">
-    <button ng-click="createObject()">Create Object</button>
-    <p ng-repeat="object in query.results">
-        {{object.objectId}} <a href="" ng-click="removeObject(object)">delete</a>
-    </p>
+    <input id="file" type="file" ng-model="file"><button ng-click="upload()">Upload</button>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
     <script src="rest.js"></script>
     <script src="parse.js"></script>

@@ -3,11 +3,13 @@ angular.module('ngParse', ['rest'])
     var _apiVersion = 1,
         _apiBaseUrl = 'https://api.parse.com/',
         _appId,
-        _restKey;
+        _restKey,
+        _masterKey;
 
-    this.init = function(appId, restKey, apiVersion) {
+    this.init = function(appId, restKey, masterKey, apiVersion) {
         _appId = appId;
         _restKey = restKey;
+        _masterKey = masterKey;
         _apiUrl =  _apiBaseUrl + (apiVersion || _apiVersion) + '/';
     }
 
@@ -187,7 +189,7 @@ angular.module('ngParse', ['rest'])
         }
 
         function ParseFile() {
-            var RESTObject = rest(_apiUrl + 'roles/@objectId', {
+            var RESTObject = rest(_apiUrl + 'files/@name', {
                 // default configs
                 headers: {
                     'X-Parse-Application-Id': _appId,
@@ -198,11 +200,28 @@ angular.module('ngParse', ['rest'])
                 get: false,
                 post: {
                     headers: {
-                        'Content-Type': 'application/json'
+                        //'Content-Type': 'application/json'
                     },
+                    before: function(configs) {
+                        configs.data = configs.data.file;
+                        configs.headers['Content-Type'] = configs.data.type;
+                    },
+                    after: function() {
+                        this.__type = 'File';
+                        delete this.file;
+                    }
                 },
+                save: 'post',
                 put: false,
-                delete: false
+                delete: {
+                    headers: {
+                        'X-Parse-Master-Key': _masterKey
+                    },
+                    before: function(configs) {
+                        configs.params = undefined;
+                    }
+                },
+                remove: 'delete'
             });
 
             return RESTObject;

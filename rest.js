@@ -42,6 +42,15 @@ angular.module('rest', [])
         return configs;
     }
 
+    function _formatData(object) {
+        var data = {};
+        forEach(object, function(value, property) {
+            if(!isFunction(value))
+                data[property] = value;
+        });
+        return data;
+    }
+
     return function (url, defaultConfigs, methods) {
         var urlParams = url.split(_SP_);
 
@@ -81,7 +90,7 @@ angular.module('rest', [])
                         httpConfigs = copy(_mergeConfigs(defaultConfigs, methodConfigs));
 
                     extend(_this, data);
-                    httpConfigs[_data] = fromJson(toJson(_this));
+                    httpConfigs[_data] = _formatData(_this);//fromJson(toJson(_this));
 
                     forEach(urlParams, function(property) {
                         if (_this[property])
